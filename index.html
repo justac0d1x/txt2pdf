@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Конвертер текстовых файлов в PDF. Поддержка .txt, .py, .js, .json, .csv и других форматов.">
+<meta name="theme-color" content="#1a1a18">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta property="og:title" content="txt2pdf — Конвертер текста в PDF">
+<meta property="og:description" content="Быстрая конвертация текстовых файлов в PDF прямо в браузере">
+<meta property="og:type" content="website">
+<title>txt2pdf</title>
+
+<!-- Favicon SVG (fa-regular fa-file-lines) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'%3E%3Crect width='384' height='512' rx='64' fill='%23252523'/%3E%3Cg transform='translate(72 56) scale(0.625)'%3E%3Cpath fill='%23c4a882' d='M64 464c-8.8 0-16-7.2-16-16V64c0-8.8 7.2-16 16-16h160v80c0 17.7 14.3 32 32 32h80V448c0 8.8-7.2 16-16 16H64zM64 0C28.7 0 0 28.7 0 64v384c0 35.3 28.7 64 64 64h256c35.3 0 64-28.7 64-64V154.5c0-17-6.7-33.3-18.7-45.3L274.7 18.7C262.7 6.7 246.5 0 229.5 0H64zm56 256c-13.3 0-24 10.7-24 24s10.7 24 24 24h144c13.3 0 24-10.7 24-24s-10.7-24-24-24H120zm0 96c-13.3 0-24 10.7-24 24s10.7 24 24 24h144c13.3 0 24-10.7 24-24s-10.7-24-24-24H120z'/%3E%3C/g%3E%3C/svg%3E">
+
+<!-- Apple Touch Icon -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'%3E%3Crect width='384' height='512' rx='64' fill='%23252523'/%3E%3Cg transform='translate(72 56) scale(0.625)'%3E%3Cpath fill='%23c4a882' d='M64 464c-8.8 0-16-7.2-16-16V64c0-8.8 7.2-16 16-16h160v80c0 17.7 14.3 32 32 32h80V448c0 8.8-7.2 16-16 16H64zM64 0C28.7 0 0 28.7 0 64v384c0 35.3 28.7 64 64 64h256c35.3 0 64-28.7 64-64V154.5c0-17-6.7-33.3-18.7-45.3L274.7 18.7C262.7 6.7 246.5 0 229.5 0H64zm56 256c-13.3 0-24 10.7-24 24s10.7 24 24 24h144c13.3 0 24-10.7 24-24s-10.7-24-24-24H120zm0 96c-13.3 0-24 10.7-24 24s10.7 24 24 24h144c13.3 0 24-10.7 24-24s-10.7-24-24-24H120z'/%3E%3C/g%3E%3C/svg%3E">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+        --bg: #1a1a18;
+        --bg-deep: #141413;
+        --surface: #252523;
+        --surface-hover: #2e2e2b;
+        --border: #3a3a37;
+        --border-light: #4a4a46;
+        --accent: #c4a882;
+        --accent-h: #d4bc9a;
+        --accent-glow: rgba(196, 168, 130, 0.12);
+        --text: #c7c2bc;
+        --text-dim: #787672;
+        --text-muted: #5a5855;
+        --success: #8ebb8e;
+        --danger: #c87070;
+        --warning: #c4a855;
+        --radius: 12px;
+        --radius-sm: 8px;
+        --font: 'Inter', system-ui, sans-serif;
+        --font-display: 'Playfair Display', Georgia, serif;
+    }
+
+    body {
+        font-family: var(--font);
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2.5rem 1rem;
+        background-image:
+            radial-gradient(ellipse at 50% 0%, rgba(196, 168, 130, 0.03) 0%, transparent 60%),
+            radial-gradient(ellipse at 80% 100%, rgba(196, 168, 130, 0.015) 0%, transparent 50%);
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    input, select, textarea {
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
+    }
+
+    .container { width: 100%; max-width: 860px; }
+
+    h1 {
+        font-family: var(--font-display);
+        font-size: 2.2rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 0.4rem;
+        color: var(--text);
+        letter-spacing: 0.02em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+    }
+    h1 .title-icon {
+        color: var(--accent);
+        font-size: 1.6rem;
+        opacity: 0.85;
+    }
+    h1 span {
+        color: var(--accent);
+        font-style: italic;
+    }
+
+    .subtitle {
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        margin-bottom: 2.2rem;
+        letter-spacing: 0.03em;
+    }
+
+    .status-panel {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .status-box {
+        flex: 1;
+        min-width: 250px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 1rem 1.2rem;
+        font-size: 0.85rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .status-box:hover {
+        border-color: var(--border-light);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    }
+    .status-box strong {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin-bottom: 0.4rem;
+        color: var(--accent);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 600;
+    }
+    .status-box strong i {
+        font-size: 0.85rem;
+        opacity: 0.8;
+    }
+    .status-box span {
+        color: var(--text-dim);
+        line-height: 1.5;
+    }
+    .status-box .ok { color: var(--success); }
+    .status-box .err { color: var(--danger); }
+    .status-box .warn { color: var(--warning); }
+
+    .status-icon {
+        margin-right: 0.3rem;
+        font-size: 0.8rem;
+    }
+
+    .btn-small {
+        background: var(--border);
+        color: var(--text);
+        border: none;
+        padding: 0.45rem 0.9rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        margin-top: 0.6rem;
+        transition: all 0.25s ease;
+        font-family: var(--font);
+        letter-spacing: 0.02em;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .btn-small:hover {
+        background: var(--accent);
+        color: var(--bg);
+    }
+
+    .dropzone {
+        border: 1.5px dashed var(--border-light);
+        border-radius: var(--radius);
+        padding: 3.5rem 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all .3s ease;
+        background: var(--surface);
+        user-select: none;
+        position: relative;
+    }
+    .dropzone:hover, .dropzone.drag-over {
+        border-color: var(--accent);
+        background: var(--accent-glow);
+        box-shadow: 0 0 30px rgba(196, 168, 130, 0.05);
+    }
+    .dropzone-icon {
+        font-size: 2.8rem;
+        margin-bottom: 1rem;
+        pointer-events: none;
+        color: var(--accent);
+        opacity: 0.6;
+    }
+    .dropzone-text {
+        color: var(--text-dim);
+        line-height: 1.7;
+        pointer-events: none;
+        font-size: 0.95rem;
+    }
+    .dropzone-text strong {
+        color: var(--accent);
+    }
+
+    .file-badge {
+        display: none;
+        align-items: center;
+        gap: 0.8rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.9rem 1.3rem;
+        margin-top: 1rem;
+        transition: all 0.3s ease;
+    }
+    .file-badge.visible { display: flex; }
+    .file-badge:hover { border-color: var(--border-light); }
+    .file-badge .icon {
+        font-size: 1.3rem;
+        color: var(--accent);
+        opacity: 0.7;
+        width: 2rem;
+        text-align: center;
+    }
+    .file-badge .info { flex: 1; }
+    .file-badge .name { font-weight: 600; font-size: 0.95rem; color: var(--text); }
+    .file-badge .meta { color: var(--text-muted); font-size: 0.8rem; margin-top: 0.15rem; }
+    .file-badge .remove {
+        background: none;
+        border: none;
+        color: var(--danger);
+        font-size: 1rem;
+        cursor: pointer;
+        padding: 0.4rem;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+    }
+    .file-badge .remove:hover {
+        background: rgba(200, 112, 112, 0.12);
+    }
+
+    .settings {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.6rem;
+        margin-top: 1.2rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.1rem 1.5rem;
+    }
+    .settings h2 {
+        grid-column: 1 / -1;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--accent);
+        margin-bottom: 0.3rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .settings h2 i {
+        font-size: 0.85rem;
+        opacity: 0.7;
+    }
+
+    .field label {
+        display: block;
+        font-size: 0.82rem;
+        color: var(--text-dim);
+        margin-bottom: 0.4rem;
+        font-weight: 500;
+    }
+    .field select, .field input[type="number"] {
+        width: 100%;
+        padding: 0.6rem 0.8rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        background: var(--bg-deep);
+        color: var(--text);
+        font-size: 0.9rem;
+        font-family: var(--font);
+        outline: none;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .field select:focus, .field input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(196, 168, 130, 0.08);
+    }
+    .field select option {
+        background: var(--surface);
+        color: var(--text);
+    }
+
+    .checkbox-field {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        cursor: pointer;
+        font-size: 0.9rem;
+        color: var(--text);
+    }
+    .checkbox-field input[type="checkbox"] {
+        accent-color: var(--accent);
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+
+    .convert-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        width: 100%;
+        margin-top: 1.5rem;
+        padding: 1.05rem;
+        border: 1px solid var(--accent);
+        border-radius: var(--radius);
+        background: transparent;
+        color: var(--accent);
+        font-size: 1.05rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .3s ease;
+        font-family: var(--font);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+    .convert-btn i {
+        font-size: 0.95rem;
+    }
+    .convert-btn:hover:not(:disabled) {
+        background: var(--accent);
+        color: var(--bg);
+        box-shadow: 0 4px 20px rgba(196, 168, 130, 0.18);
+        transform: translateY(-1px);
+    }
+    .convert-btn:active:not(:disabled) {
+        transform: translateY(0);
+    }
+    .convert-btn:disabled {
+        opacity: .3;
+        cursor: not-allowed;
+        border-color: var(--border);
+        color: var(--text-muted);
+    }
+
+    .status {
+        text-align: center;
+        margin-top: 1.1rem;
+        font-size: 0.9rem;
+        min-height: 1.5em;
+        color: var(--text-dim);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+    }
+    .status.ok { color: var(--success); }
+    .status.err { color: var(--danger); }
+
+    .footer {
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.78rem;
+        letter-spacing: 0.03em;
+    }
+    .footer a {
+        color: var(--accent);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .footer a:hover {
+        color: var(--accent-h);
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+    @media (max-width: 600px) {
+        h1 { font-size: 1.6rem; }
+        .settings { grid-template-columns: 1fr; }
+        .dropzone { padding: 2.5rem 1.5rem; }
+        body { padding: 1.5rem 0.8rem; }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1><i class="fa-regular fa-file-lines title-icon"></i> txt<span>2</span>pdf</h1>
+    <p class="subtitle">Конвертер текстовых файлов в PDF</p>
+
+    <div class="status-panel">
+        <div class="status-box" id="boxLib">
+            <strong><i class="fa-solid fa-microchip"></i> Движок PDF</strong>
+            <span id="libText" class="warn"><i class="fa-solid fa-spinner fa-spin status-icon"></i> Ищем библиотеку...</span>
+        </div>
+        <div class="status-box" id="boxFont">
+            <strong><i class="fa-solid fa-font"></i> Шрифт</strong>
+            <span id="fontText" class="warn"><i class="fa-solid fa-spinner fa-spin status-icon"></i> Скачиваю Roboto...</span>
+            <input type="file" id="customFontInput" accept=".ttf" style="display:none">
+            <button class="btn-small" id="btnLoadFont" style="display:none"><i class="fa-regular fa-folder-open"></i> Указать .ttf</button>
+        </div>
+    </div>
+
+    <div class="dropzone" id="dropzone">
+        <div class="dropzone-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+        <div class="dropzone-text">
+            <strong>Нажмите</strong> или перетащите файл<br>
+            .txt · .py · .js · .json · .csv и т.д.
+        </div>
+    </div>
+
+    <div class="file-badge" id="fileBadge">
+        <div class="icon"><i class="fa-solid fa-paperclip"></i></div>
+        <div class="info">
+            <div class="name" id="fileName">—</div>
+            <div class="meta" id="fileMeta">—</div>
+        </div>
+        <button class="remove" id="removeFile"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="settings">
+        <h2><i class="fa-solid fa-sliders"></i> Настройки страницы</h2>
+        <div class="field">
+            <label>Размер шрифта (pt)</label>
+            <input type="number" id="fontSize" value="10" min="6" max="28" step="0.5" />
+        </div>
+        <div class="field">
+            <label>Поля (мм)</label>
+            <input type="number" id="margin" value="15" min="5" max="50" step="1" />
+        </div>
+        <div class="field">
+            <label class="checkbox-field"><input type="checkbox" id="lineNumbers" checked /> Нумерация строк</label>
+        </div>
+        <div class="field">
+            <label class="checkbox-field"><input type="checkbox" id="showHeader" checked /> Имя файла в колонтитуле</label>
+        </div>
+    </div>
+
+    <button class="convert-btn" id="convertBtn" disabled><i class="fa-solid fa-arrow-right-arrow-left"></i> Конвертировать</button>
+    <div class="status" id="status"></div>
+
+    <div class="footer">
+        txt2pdf &copy; 2025 &middot; Работает полностью в браузере &middot; Файлы не покидают ваш компьютер
+    </div>
+</div>
+
+<script>
+var currentFile = null;
+var currentText = null;
+var customFontBase64 = null;
+
+function setStatus(msg, type) {
+    var el = document.getElementById("status");
+    el.innerHTML = msg; el.className = "status " + (type || "");
+}
+
+(function loadJsPDF() {
+    var sources = [
+        "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js",
+        "https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js",
+        "jspdf.min.js"
+    ];
+    var i = 0;
+    function next() {
+        if (i >= sources.length) {
+            document.getElementById("libText").innerHTML = '<i class="fa-solid fa-circle-xmark status-icon"></i> Ошибка загрузки jsPDF';
+            document.getElementById("libText").className = "err";
+            return;
+        }
+        var script = document.createElement("script");
+        script.src = sources[i++];
+        script.onload = function() {
+            if (window.jspdf) {
+                document.getElementById("libText").innerHTML = '<i class="fa-solid fa-circle-check status-icon"></i> Движок готов';
+                document.getElementById("libText").className = "ok";
+            } else next();
+        };
+        script.onerror = next;
+        document.head.appendChild(script);
+    }
+    next();
+})();
+
+function bufferToBase64(buffer) {
+    var binary = '';
+    var bytes = new Uint8Array(buffer);
+    for (var i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+}
+
+(function loadFont() {
+    var fontText = document.getElementById("fontText");
+    var btnLoad = document.getElementById("btnLoadFont");
+    var fontUrl = "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf";
+
+    fetch(fontUrl)
+        .then(function(res) {
+            if (!res.ok) throw new Error();
+            return res.arrayBuffer();
+        })
+        .then(function(buffer) {
+            customFontBase64 = bufferToBase64(buffer);
+            fontText.innerHTML = '<i class="fa-solid fa-circle-check status-icon"></i> Шрифт загружен';
+            fontText.className = "ok";
+        })
+        .catch(function() {
+            fontText.innerHTML = '<i class="fa-solid fa-circle-xmark status-icon"></i> Ошибка загрузки шрифта';
+            fontText.className = "err";
+            btnLoad.style.display = "inline-flex";
+        });
+
+    var fontInput = document.getElementById("customFontInput");
+    btnLoad.addEventListener("click", function() { fontInput.click(); });
+    fontInput.addEventListener("change", function(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        fontText.innerHTML = '<i class="fa-solid fa-spinner fa-spin status-icon"></i> Читаю...';
+        fontText.className = "warn";
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+            customFontBase64 = bufferToBase64(ev.target.result);
+            fontText.innerHTML = '<i class="fa-solid fa-circle-check status-icon"></i> Шрифт загружен';
+            fontText.className = "ok";
+            btnLoad.style.display = "none";
+        };
+        reader.readAsArrayBuffer(file);
+    });
+})();
+
+document.addEventListener("DOMContentLoaded", function () {
+    var dropzone = document.getElementById("dropzone");
+    var fileInput = document.createElement("input");
+    fileInput.type = "file"; fileInput.style.display = "none";
+    document.body.appendChild(fileInput);
+
+    dropzone.addEventListener("click", function () { fileInput.value = ""; fileInput.click(); });
+    fileInput.addEventListener("change", function () {
+        if (fileInput.files[0]) handleFile(fileInput.files[0]);
+    });
+
+    dropzone.addEventListener("dragover", function (e) { e.preventDefault(); e.stopPropagation(); dropzone.classList.add("drag-over"); });
+    dropzone.addEventListener("dragleave", function () { dropzone.classList.remove("drag-over"); });
+    dropzone.addEventListener("drop", function (e) {
+        e.preventDefault(); e.stopPropagation(); dropzone.classList.remove("drag-over");
+        if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+    });
+    document.addEventListener("dragover", function(e){e.preventDefault();});
+    document.addEventListener("drop", function(e){e.preventDefault();});
+
+    document.getElementById("removeFile").addEventListener("click", function (e) {
+        e.stopPropagation(); currentFile = null; currentText = null;
+        document.getElementById("fileBadge").classList.remove("visible");
+        document.getElementById("convertBtn").disabled = true;
+        setStatus("", "");
+    });
+
+    document.getElementById("convertBtn").addEventListener("click", function () {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            setStatus('<i class="fa-solid fa-triangle-exclamation"></i> jsPDF не загружен.', "err"); return;
+        }
+        if (!customFontBase64) {
+            setStatus('<i class="fa-solid fa-triangle-exclamation"></i> Дождитесь загрузки шрифта.', "err"); return;
+        }
+        try { generatePDF(window.jspdf.jsPDF); } catch (e) { setStatus('<i class="fa-solid fa-triangle-exclamation"></i> ' + e.message, "err"); }
+    });
+});
+
+function handleFile(file) {
+    if (!file) return;
+    setStatus('<i class="fa-solid fa-spinner fa-spin"></i> Читаю файл...', "");
+    var reader = new FileReader();
+    reader.onload = function () {
+        currentText = reader.result.replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\t/g, "    ");
+        currentFile = file;
+        document.getElementById("fileName").textContent = file.name;
+        document.getElementById("fileMeta").textContent = Math.round(file.size/1024) + " KB";
+        document.getElementById("fileBadge").classList.add("visible");
+        document.getElementById("convertBtn").disabled = false;
+        setStatus('<i class="fa-solid fa-circle-check"></i> Файл готов к конвертации', "ok");
+    };
+    reader.readAsText(file, "UTF-8");
+}
+
+function generatePDF(jsPDF) {
+    setStatus('<i class="fa-solid fa-spinner fa-spin"></i> Генерирую PDF...', "");
+    var fontSize = parseFloat(document.getElementById("fontSize").value) || 10;
+    var margin = parseFloat(document.getElementById("margin").value) || 15;
+    var lineNums = document.getElementById("lineNumbers").checked;
+    var showHeader = document.getElementById("showHeader").checked;
+
+    var doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    doc.addFileToVFS("CustomFont.ttf", customFontBase64);
+    doc.addFont("CustomFont.ttf", "CustomFont", "normal");
+    doc.setFont("CustomFont", "normal");
+
+    var pageW = doc.internal.pageSize.getWidth();
+    var pageH = doc.internal.pageSize.getHeight();
+    var usableW = pageW - 2 * margin;
+    var lineH = fontSize * 0.45;
+    var curY = margin + (showHeader ? 8 : 0);
+    var pageNum = 1;
+
+    function drawFooter() {
+        doc.setFontSize(8).setTextColor(160, 160, 160);
+        doc.text(String(pageNum), pageW / 2, pageH - margin + 4, { align: "center" });
+    }
+
+    function newPage() {
+        drawFooter();
+        doc.addPage(); pageNum++; curY = margin + (showHeader ? 8 : 0);
+        if (showHeader) {
+            doc.setFontSize(8).setTextColor(160, 160, 160);
+            doc.text(currentFile.name, margin, margin + 4);
+        }
+    }
+
+    if (showHeader) {
+        doc.setFontSize(8).setTextColor(160, 160, 160);
+        doc.text(currentFile.name, margin, margin + 4);
+    }
+
+    doc.setFontSize(fontSize).setTextColor(30, 30, 30);
+
+    var numPrefixW = lineNums ? doc.getTextWidth("0000 | ") : 0;
+    var textMaxWidth = usableW - numPrefixW;
+    var lines = currentText.split("\n");
+
+    for (var i = 0; i < lines.length; i++) {
+        var raw = lines[i];
+        var wrapped = raw === "" ? [""] : doc.splitTextToSize(raw, textMaxWidth);
+
+        for (var j = 0; j < wrapped.length; j++) {
+            if (curY + lineH > pageH - margin - 5) {
+                newPage();
+                doc.setFont("CustomFont", "normal").setFontSize(fontSize);
+            }
+            var x = margin;
+            if (lineNums) {
+                if (j === 0) {
+                    doc.setTextColor(160, 160, 160);
+                    var num = String(i + 1);
+                    while (num.length < 4) num = " " + num;
+                    doc.text(num + " |", x, curY);
+                }
+                doc.setTextColor(30, 30, 30);
+                x += numPrefixW;
+            }
+            doc.text(wrapped[j], x, curY);
+            curY += lineH;
+        }
+    }
+
+    drawFooter();
+    var outName = currentFile.name.replace(/\.\w+$/, "") + ".pdf";
+    doc.save(outName);
+    setStatus('<i class="fa-solid fa-circle-check"></i> Готово! Файл ' + outName + ' скачан.', "ok");
+}
+</script>
+</body>
+</html>
